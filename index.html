@@ -10,6 +10,7 @@
   th, td { border: 1px solid #000; padding: 8px; text-align: left; }
   h3 { margin-top: 30px; }
   .ativo { color: green; font-weight: bold; }
+  td[contenteditable="true"] { background-color: #f9f9f9; }
 </style>
 </head>
 <body>
@@ -23,25 +24,48 @@
     <th>Valor</th>
     <th>Tempo</th>
   </tr>
+  <tr>
+    <td>17/09/2025 20:00</td>
+    <td class="ativo">Andriele INSS</td>
+    <td contenteditable="true"></td>
+    <td class="cronometro">00:00:00</td>
+  </tr>
+  <tr>
+    <td>17/09/2025 20:05</td>
+    <td class="ativo">Marco INSS</td>
+    <td contenteditable="true"></td>
+    <td class="cronometro">00:00:00</td>
+  </tr>
+  <tr>
+    <td>17/09/2025 20:10</td>
+    <td class="ativo">Marco Obra</td>
+    <td contenteditable="true"></td>
+    <td class="cronometro">00:00:00</td>
+  </tr>
+  <tr>
+    <td>17/09/2025 20:15</td>
+    <td class="ativo">Lorena Fixada</td>
+    <td contenteditable="true"></td>
+    <td class="cronometro">00:00:00</td>
+  </tr>
+  <tr>
+    <td>17/09/2025 20:20</td>
+    <td class="ativo">Davi Azulejista</td>
+    <td contenteditable="true"></td>
+    <td class="cronometro">00:00:00</td>
+  </tr>
 </table>
 
 <h3>Totais</h3>
-<ul id="totais"></ul>
+<ul id="totais">
+  <li id="somaTotal" style="font-weight:bold;">Soma Total: R$ 0.00</li>
+</ul>
 
 <script>
-const entradas = [
-  { tipo: "Andriele INSS", valor: 1000 },
-  { tipo: "Marco INSS", valor: 1518 },
-  { tipo: "Marco Obra", valor: 1518 },
-  { tipo: "Lorena Fixada", valor: 1518 },
-  { tipo: "Davi Azulejista", valor: 1200 }
-];
-
-const totais = {};
-let somaTotal = 0;
-
-const tabela = document.getElementById('tabelaEntradas');
-const ulTotais = document.getElementById('totais');
+// Cronômetro
+const linhasCronometro = document.querySelectorAll('.cronometro');
+const inicios = [];
+linhasCronometro.forEach(linha => inicios.push(new Date()));
 
 function formatarTempo(segundos) {
   const h = String(Math.floor(segundos / 3600)).padStart(2,'0');
@@ -50,50 +74,31 @@ function formatarTempo(segundos) {
   return `${h}:${m}:${s}`;
 }
 
-const linhasData = []; // para salvar a hora de cada entrada
-
-entradas.forEach(entrada => {
-  const novaLinha = tabela.insertRow();
-  const celulaData = novaLinha.insertCell(0);
-  const celulaTipo = novaLinha.insertCell(1);
-  const celulaValor = novaLinha.insertCell(2);
-  const celulaTempo = novaLinha.insertCell(3);
-
-  const dataAtual = new Date();
-  celulaData.innerText = dataAtual.toLocaleString();
-  celulaTipo.innerText = entrada.tipo;
-  celulaValor.innerText = entrada.valor.toFixed(2);
-  celulaTipo.classList.add('ativo');
-
-  // Armazena o horário inicial para o cronômetro
-  linhasData.push({ linha: celulaTempo, inicio: dataAtual });
-
-  // Calcula total por tipo
-  totais[entrada.tipo] = (totais[entrada.tipo] || 0) + entrada.valor;
-  somaTotal += entrada.valor;
-});
-
-// Exibe totais por tipo
-for(const tipo in totais){
-  const li = document.createElement('li');
-  li.innerText = `${tipo}: R$ ${totais[tipo].toFixed(2)}`;
-  ulTotais.appendChild(li);
-}
-
-// Exibe soma geral
-const liTotal = document.createElement('li');
-liTotal.innerText = `Soma Total: R$ ${somaTotal.toFixed(2)}`;
-liTotal.style.fontWeight = 'bold';
-ulTotais.appendChild(liTotal);
-
-// Atualiza cronômetro a cada segundo
 setInterval(() => {
   const agora = new Date();
-  linhasData.forEach(item => {
-    const segundosPassados = Math.floor((agora - item.inicio)/1000);
-    item.linha.innerText = formatarTempo(segundosPassados);
+  linhasCronometro.forEach((linha, i) => {
+    const segundosPassados = Math.floor((agora - inicios[i])/1000);
+    linha.innerText = formatarTempo(segundosPassados);
   });
 }, 1000);
+
+// Soma automática dos valores que você digitar
+const valoresCells = document.querySelectorAll('td[contenteditable="true"]');
+const somaTotalElem = document.getElementById('somaTotal');
+
+function atualizarSoma() {
+  let soma = 0;
+  valoresCells.forEach(cell => {
+    const valor = parseFloat(cell.innerText.replace(',', '.'));
+    if(!isNaN(valor)) soma += valor;
+  });
+  somaTotalElem.innerText = `Soma Total: R$ ${soma.toFixed(2)}`;
+}
+
+// Atualiza soma sempre que digitar algo
+valoresCells.forEach(cell => {
+  cell.addEventListener('input', atualizarSoma);
+});
 </script>
 
 </body>
