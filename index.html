@@ -3,127 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Financeiro</title>
+<title>Controle de Entradas Automático</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
-  input, button { margin: 5px; padding: 5px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
   th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-  th { background-color: #f2f2f2; }
-  button.imprimir { padding: 3px 6px; font-size: 12px; }
+  h3 { margin-top: 30px; }
 </style>
 </head>
 <body>
 
-<h2>Registro Financeiro</h2>
+<h2>Histórico de Entradas</h2>
 
-<label>Valor: </label>
-<input type="number" id="valor" step="0.01">
-<label>Data: </label>
-<input type="date" id="data">
-<label>Descrição: </label>
-<input type="text" id="descricao">
-<br>
-<button onclick="adicionarEntrada()">Adicionar Entrada</button>
-<button onclick="adicionarSaida()">Adicionar Saída</button>
-
-<h3 id="tituloEntradas">Entradas – Saldo Atual: R$ 0.00</h3>
 <table id="tabelaEntradas">
   <tr>
-    <th>Valor</th>
     <th>Data</th>
-    <th>Descrição</th>
-    <th>Imprimir</th>
+    <th>Tipo</th>
+    <th>Valor</th>
   </tr>
 </table>
 
-<h3>Saídas</h3>
-<table id="tabelaSaidas">
-  <tr>
-    <th>Valor</th>
-    <th>Data</th>
-    <th>Descrição</th>
-    <th>Imprimir</th>
-  </tr>
-</table>
+<h3>Totais</h3>
+<ul id="totais"></ul>
 
 <script>
-let saldo = 0; // saldo só para entradas
+const entradas = [
+  { tipo: "Andriele INSS", valor: 1000 },
+  { tipo: "Marco INSS", valor: 1518 },
+  { tipo: "Marco Obra", valor: 1518 },
+  { tipo: "Lorena Fixada", valor: 1518 }
+];
 
-function atualizarTituloEntradas() {
-  document.getElementById("tituloEntradas").innerText = `Entradas – Saldo Atual: R$ ${saldo.toFixed(2)}`;
+const totais = {};
+let somaTotal = 0;
+
+const tabela = document.getElementById('tabelaEntradas');
+const ulTotais = document.getElementById('totais');
+
+entradas.forEach(entrada => {
+  // Adiciona linha na tabela
+  const novaLinha = tabela.insertRow();
+  const celulaData = novaLinha.insertCell(0);
+  const celulaTipo = novaLinha.insertCell(1);
+  const celulaValor = novaLinha.insertCell(2);
+
+  const dataAtual = new Date();
+  celulaData.innerText = dataAtual.toLocaleString();
+  celulaTipo.innerText = entrada.tipo;
+  celulaValor.innerText = entrada.valor.toFixed(2);
+
+  // Calcula total por tipo
+  totais[entrada.tipo] = (totais[entrada.tipo] || 0) + entrada.valor;
+
+  // Soma geral
+  somaTotal += entrada.valor;
+});
+
+// Exibe totais por tipo
+for(const tipo in totais){
+  const li = document.createElement('li');
+  li.innerText = `${tipo}: R$ ${totais[tipo].toFixed(2)}`;
+  ulTotais.appendChild(li);
 }
 
-function adicionarEntrada() {
-  const valor = parseFloat(document.getElementById("valor").value);
-  const data = document.getElementById("data").value;
-  const descricao = document.getElementById("descricao").value;
-
-  if(!isNaN(valor) && data && descricao) {
-    saldo += valor;
-
-    const tabela = document.getElementById("tabelaEntradas");
-    const row = tabela.insertRow();
-    row.insertCell(0).innerText = valor.toFixed(2);
-    row.insertCell(1).innerText = data;
-    row.insertCell(2).innerText = descricao;
-
-    const imprimirBtn = document.createElement("button");
-    imprimirBtn.innerText = "Imprimir";
-    imprimirBtn.className = "imprimir";
-    imprimirBtn.onclick = () => imprimirRegistro(valor, data, descricao, saldo);
-    row.insertCell(3).appendChild(imprimirBtn);
-
-    atualizarTituloEntradas();
-    limparCampos();
-  } else {
-    alert("Preencha todos os campos corretamente!");
-  }
-}
-
-function adicionarSaida() {
-  const valor = parseFloat(document.getElementById("valor").value);
-  const data = document.getElementById("data").value;
-  const descricao = document.getElementById("descricao").value;
-
-  if(!isNaN(valor) && data && descricao) {
-    const tabela = document.getElementById("tabelaSaidas");
-    const row = tabela.insertRow();
-    row.insertCell(0).innerText = valor.toFixed(2);
-    row.insertCell(1).innerText = data;
-    row.insertCell(2).innerText = descricao;
-    
-    const imprimirBtn = document.createElement("button");
-    imprimirBtn.innerText = "Imprimir";
-    imprimirBtn.className = "imprimir";
-    imprimirBtn.onclick = () => imprimirRegistro(-valor, data, descricao);
-    row.insertCell(3).appendChild(imprimirBtn);
-
-    limparCampos();
-  } else {
-    alert("Preencha todos os campos corretamente!");
-  }
-}
-
-function imprimirRegistro(valor, data, descricao, saldoAtual = null) {
-  const novaJanela = window.open('', '', 'width=400,height=300');
-  novaJanela.document.write('<h3>Comprovante</h3>');
-  novaJanela.document.write('<p><strong>Valor:</strong> R$ ' + Math.abs(valor).toFixed(2) + '</p>');
-  novaJanela.document.write('<p><strong>Data:</strong> ' + data + '</p>');
-  novaJanela.document.write('<p><strong>Descrição:</strong> ' + descricao + '</p>');
-  if(saldoAtual !== null){
-    novaJanela.document.write('<p><strong>Saldo após Entrada:</strong> R$ ' + saldoAtual.toFixed(2) + '</p>');
-  }
-  novaJanela.document.write('<script>window.print();<\/script>');
-}
-
-function limparCampos() {
-  document.getElementById("valor").value = "";
-  document.getElementById("data").value = "";
-  document.getElementById("descricao").value = "";
-}
+// Exibe soma geral
+const liTotal = document.createElement('li');
+liTotal.innerText = `Soma Total: R$ ${somaTotal.toFixed(2)}`;
+liTotal.style.fontWeight = 'bold';
+ulTotais.appendChild(liTotal);
 </script>
 
 </body>
 </html>
-
