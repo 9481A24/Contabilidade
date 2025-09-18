@@ -11,6 +11,7 @@
   h3 { margin-top: 30px; }
   .ativo { color: green; font-weight: bold; }
   td[contenteditable="true"] { background-color: #f9f9f9; }
+  .data { cursor: pointer; background: #eef; }
 </style>
 </head>
 <body>
@@ -25,31 +26,31 @@
     <th>Tempo</th>
   </tr>
   <tr>
-    <td>17/09/2025 20:00</td>
+    <td class="data"></td>
     <td class="ativo">Andriele INSS</td>
     <td contenteditable="true"></td>
     <td class="cronometro">00:00:00</td>
   </tr>
   <tr>
-    <td>17/09/2025 20:05</td>
+    <td class="data"></td>
     <td class="ativo">Marco INSS</td>
     <td contenteditable="true"></td>
     <td class="cronometro">00:00:00</td>
   </tr>
   <tr>
-    <td>17/09/2025 20:10</td>
+    <td class="data"></td>
     <td class="ativo">Marco Obra</td>
     <td contenteditable="true"></td>
     <td class="cronometro">00:00:00</td>
   </tr>
   <tr>
-    <td>17/09/2025 20:15</td>
+    <td class="data"></td>
     <td class="ativo">Lorena Fixada</td>
     <td contenteditable="true"></td>
     <td class="cronometro">00:00:00</td>
   </tr>
   <tr>
-    <td>17/09/2025 20:20</td>
+    <td class="data"></td>
     <td class="ativo">Davi Azulejista</td>
     <td contenteditable="true"></td>
     <td class="cronometro">00:00:00</td>
@@ -62,7 +63,43 @@
 </ul>
 
 <script>
-// Cronômetro
+// === Preenche data atual ===
+function formatarData(d) {
+  return d.toLocaleDateString('pt-BR');
+}
+document.querySelectorAll('.data').forEach(cell => {
+  cell.innerText = formatarData(new Date());
+});
+
+// === Clique na data abre calendário ===
+document.querySelectorAll('.data').forEach(cell => {
+  cell.addEventListener('click', () => {
+    const input = document.createElement("input");
+    input.type = "date";
+    input.style.position = "absolute";
+    input.style.left = cell.getBoundingClientRect().left + "px";
+    input.style.top = cell.getBoundingClientRect().top + "px";
+    input.style.zIndex = 1000;
+
+    // Quando selecionar uma data
+    input.addEventListener("change", () => {
+      const escolhida = new Date(input.value);
+      cell.innerText = formatarData(escolhida);
+      document.body.removeChild(input);
+    });
+
+    // Se sair sem escolher
+    input.addEventListener("blur", () => {
+      document.body.removeChild(input);
+    });
+
+    document.body.appendChild(input);
+    input.focus();
+    input.click();
+  });
+});
+
+// === Cronômetro ===
 const linhasCronometro = document.querySelectorAll('.cronometro');
 const inicios = [];
 linhasCronometro.forEach(linha => inicios.push(new Date()));
@@ -82,7 +119,7 @@ setInterval(() => {
   });
 }, 1000);
 
-// Soma automática dos valores que você digitar
+// === Soma automática ===
 const valoresCells = document.querySelectorAll('td[contenteditable="true"]');
 const somaTotalElem = document.getElementById('somaTotal');
 
@@ -94,8 +131,6 @@ function atualizarSoma() {
   });
   somaTotalElem.innerText = `Soma Total: R$ ${soma.toFixed(2)}`;
 }
-
-// Atualiza soma sempre que digitar algo
 valoresCells.forEach(cell => {
   cell.addEventListener('input', atualizarSoma);
 });
